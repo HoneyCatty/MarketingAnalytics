@@ -1,0 +1,206 @@
+---
+title: "Linear Regression"
+author: "Xiaojing Dong"
+date: "September 18, 2017"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+## Linear Regression
+
+Linear regression models are highly popular in marketing analytics. It is important to understand how to run regression models using R. 
+
+### Running Regression Model
+To do that, we need to load the data first into R, here **data frame** is the most common data structure. 
+
+**Data frame** is commonly used for storing data. It is very flexible, and can store different data format together in one data frame. The data can be numeric, character, logical, etc.
+
+```{r loaddata}
+df = read.csv("Coffee_inClass.csv", header=TRUE)
+
+```
+Here the option "header=TRUE", allows the csv file to have a first row listing the variable names. You can also refer to each columns using these variable names, instead of finding out the column id number before you can refer to a variable in the data frame.
+
+To view the first few rows of the data, you can simply use the head() command
+```{r head}
+head(df)
+```
+
+To check on the size of the dataframe, we can use
+```{r dim}
+dim(df)
+```
+
+Now we have the data loaded into the data frame "df", we can define the Y variable, and the X variables to get ready for estimating a linear regression model. 
+
+First, we need to know why we are running this regression? What's the business question we are trying to address?
+
+Imagine that you are given a task of understanding how price influences sales. It is natural to select sales as the Y variable, and price as the X variable, and estimate a linear regression model. Here is how you do that using R. 
+
+```{r regression}
+Y = df$Sales1
+X = df$Price1
+lm1 = lm(Y~X)
+summary(lm1)
+```
+
+
+
+### Understand the Regression Results
+
+Based on the above analysis, we got the estimation results from running a linear regression model  
+$Sales = \beta_0+\beta1\times Price+\epsilon$    
+
+The estimation restuls are stored in an object. Based on the code, we named it as "lm1", standing for the first result from a linear regression analysis in this lecture. The object contains many components, and some of them are listed below. For the full list, please check the manual using **help**. 
+
+An object of class "lm" is a list containing at least the following components:
+
+* *coefficients*, 	  a named vector of coefficients
+* *residuals*,   	    the residuals, that is response minus fitted values.
+* *fitted.values*,    the fitted mean values.
+* *rank*,             the numeric rank of the fitted linear model.
+* *df.residual*,      the residual degrees of freedom.  
+
+To refer to any component within the object, we can use "$". For example,
+```{r}
+mean(lm1$residuals)
+var(lm1$residuals)
+hist(lm1$residuals,20)
+```
+
+***
+> Q: Based on the histgram, any comments on the model?
+
+To look at the summary of the estimation restuls, we can use **anova()** function to get the analysis of variance, and **summary()** for the estimation summary.   
+
+```{r}
+anova(lm1)
+summary(lm1)
+```
+
+The most relevant part in the ANOVA table is the F-statistics, which is also shown towards the end using the **summary()** function. The **summary()** function shows the estimation results, including the estimated parameter values and their standard errors, and t-values, etc.
+
+
+####Parameter Estimates  
+The estimated parameters evaluates the *marginal* impact of an $X$ variable on the $Y$ variable, *holding everything else constant*. In other words, the parameter estimates indicates how much $Y$ would change, if only the relevant $X$ value is increased by 1 unit. The unit is the same as the $X$ variable unit, when estimating the model.
+
+####Standard Error of the Estimates
+
+In the estimation result table, the column next to the estimates lists the standard errors of the parameter estimates. These values refer to the uncertainty of the estimation results. If the data is very certain of a particular parameter value, its standard error is small.  
+
+For example, in the above regression analysis, the estimated intercept value is 2254.7, seems to be a really large positive number. Its standard error is 1903.0. One way to understand these results is to consider the intercept is from a Normal distribution, with the estimated value as the mean, and the standard error as the standard deviation of the distribution. that is   
+$\beta_0\sim N(\mu=2254.7, \sigma^2=1903.0^2)$   
+
+We can plot its distribution using
+```{r}
+a=seq(-3500,8000,100)
+mu=2254.7
+sigma = 1903
+pdfa = dnorm(a,mu,sigma)
+plot(a,pdfa,type="l")
+```
+
+In regression analysis, often we would like to understand whether a particular $X$ variable has positive or negative impact on the $Y$ variable. So, it is easier to check the value of the parameter estimates for the $X$ variable and make such judgement. This plot demonstrates that it is important to examine not only the estimated parameter values, but also the standard error. 
+
+In the above plot, we can see that although the estimate is really high, over 2000 (2254.7), there is still a high probability for it to be negative. The exact probability can be calculated using the CDF of normal distribution
+
+```{r}
+png = pnorm(0,mu,sigma)
+png
+```
+
+This result says although the estimated value is over 2000, due to its large uncertainty (sdandard error is 1903), there is still a high chance this parameter is actually negative, about 12%. So, we are not certain this $X$ variable has positive impact on the $Y$ variable. 
+
+What would happen if the uncertainty is lower, as represented by a smaller sdandard error. For example, if the estimated value is still the same, but the standard error is 1000 (as compared with 1903), now let's plot the two normal distributions together
+
+```{r}
+pdfa1 = dnorm(a,mu,1000)
+pp = cbind(pdfa,pdfa1)
+matplot(a,pp, type="l",col=c("red","blue"))
+```
+
+The red line plot has the larger standard error vs. the blue line. We can see that the parameter represented by the blue line has a much smaller chance to be negative, the probability is `r pnorm(0,mu,1000)`
+
+Above we discussed the meaning of the standard error for model estimate, and mentioned that it measures the uncertainty in the model estimate. Next, we discuss an important factor that influences the value of the standard error: size of the data.
+
+This seems to be really annoying as we wanted to use standard error value to gauge the uncertainty in the estimate, but the value is actually also influenced by the size of the data. To some extent, this is logical: you are more likely to be more centain about the estimate from a large data set. 
+
+An important feature of standard error: **standard error of a model estimate is inversely proportional to the size of the data.** 
+
+This brings in an important responsibility to the "Big Data" exercise. Becase the data size is big (otherwise, it won't be called "big data"), due to the features of the standard errors, any variable throwed in the regression model will come out (most likely) have very small standard errors, meaning very certain about the variable's impact. However, knowing this specifial feature of standard errors, we shoudl realize that it is not always the case. 
+
+In practice, in all data analysis, the parameter estimates from a model would have a standard error indicating the level of uncertainty regarding that estimate. However, due to its relationship with the size of the data, in practice, when the size of the data is really huge, standard errors are often ignored. 
+
+####t-statistics
+
+T statistics are calculated as the ratio between the model estimates and each estimate's standard error. 
+$t-stat=\frac{\hat{\beta}}{SE_\hat{\beta}}$
+
+This calculation can help us to compare the two plots above. Both the blue and red lines share the same estimates, the blue plot has smaller standard error, and therefore higher t-values, comparing to the red plot. The blue plot is also more certain that the estimate is positive, comparing to the red plot. 
+
+So t-value is similar to p-value, both are useful statistical tools to help us gauge the sign of the estimate, considering the uncertainty of the estimate. 
+
+Usually,
+
+* If $t-stat>2.0$, the estimate is considered to be positive
+* If $t-stat<-2.0$, the estimate is considered to be negative
+* if $-2.0<t<2.0$, the estimate is considered to be statistically zero.
+
+#### R-Square
+
+The R-squared value represents the fit of the model to the data, measured as the percentage of information in the Y values that are captured by the model. In statistics, many times, we use the variance of the data to evaluate the amount of information in the data. As such, the R-squared value is calculated as 
+
+$R^2=\frac{var(\hat{Y})}{var(Y)}$
+
+where $\hat{Y}$ refers to the calculated Y values using the estimated results from the model. 
+
+Intuitively, the data Y takes different value at different data points, and we are trying to build a model explain those variations. So that we can understand the relationship between the changes in X with those in Y. The best model will predict the Y values perfectly, in terms of its variations (variance). In that case, the $R^2=1$. However, such perfect model is hard to come by. But statistically, we hope to be able to get a meaningful model in the sense that the model can describe most part of the variations in the Y values. That's why a higher $R^2$ value indicates the model fits the data better.
+
+> Q: based on that equation, can you explain why $R^2$ would not be able to take a value bigger than 1?
+
+An important feature of $R^2$: **Adding any $X$ variable always increases $R^2$ value.** This is true even when the added $X$ variable is meaningless to the model. 
+
+One possible way to address such issue is to use $adjusted-R^2$, which is calculated as  
+
+$R^2_{adj}=1-[\frac{(1-R^2)(n-1)}{n-k-1}]$
+
+In this equation, $n$ refers to the number of $Y$ values in the data, or the size of the data. $k$ refers to the number of $X$ variables in the model. In this example $k=1$.
+
+You do not need to memorize the equation of calculating the $adjusted-R^2$ values, however, you need to know that the $adjusted-R^2$ is similar to $R^2$ in capturing the goodness-of-fit for the model. In addition, $adjusted-R^2$ panelizes the large number of $X$ variables included in the model, in order to overcome the issue of $R^2$ mentioned above.
+
+#### F-statistics
+
+As discussed above, $t-stat$ can help gauge whether an $X$ variable has statistically significant impact on the $Y$ variable. It is very commonly used. However, $F-stat$ gauges whether the model is actually necessary. As you can imagine, such an exercise is not very common in Marketing Analytics - in almost all the cases, having a model *is* better.
+
+To evaluate whether it is necessary to have a model, $F-stat$ compares two differences:   
+1. The difference between having the proposed model and no model
+2. The difference between the data and the proposed model
+
+If the first difference is very small, comparing to the second difference, the model does not brings any meaningful value, so no need of a model. Vice versa. 
+
+$F-stat=\frac{\sum_{i=1}^{i=N}(\hat{Y_i}-\bar{Y_i})^2/K}{\sum_{i=1}^{i=N}(Y_i-\hat{Y_i})^2/(N-K-1)}$
+
+F-stat is not that commonly used in Marketing Analytics, but it is important to understand its concept. 
+
+#### Summary
+
+All the above discussions help to understand the *statistical* results from running a regression model. These numbers are useful in determining things like (1) whether the model fits the data well $(R^2)$, (2) whether an $X$ variable has positive, negative or statistically insignficant impact on the $Y$ variable. But it is critical to understand the meanings and implications, more importantly, the limitations of each statistics. 
+
+In addition, a thorough understanding of these numbers can only help you make better use of the tool *Regression Model*. In Marketing Analytics, we always use the tool for a particular purpose, that may help making better marketing decisions. It is therefore necessary for the analyst to fully leverage Marketing knowledge as well. That will help to determine which variable in the data is the $Y$, which are included in the $X$, and even which model to choose. 
+
+For example, depending on the purpose you are running the regression model, you may find yourself sometimes choosing (1) a model with lower $R^2$ value than a competing model with higher $R^2$ value; (2) a model leaving a $X$ variable in the model, even with a $t-stat$ value close to 0. It is important to choose the *meaningful* variables for addressing the business (marketing) issue. 
+
+_**It is critical for the analyst to have a good idea why each varaible is included in the model. More importantly, which variables are important but missed from the data or the model. **_   
+
+Finally, Regression analysis provides statistical evidence for correlations between the $Y$ variable and each of the $X$ variables. It DOES NOT measure causality. The fact that we have to find a $Y$ varaible (on the left hand size of the regression model), and put it in a different "status" from the $X$ variables (on the right hand side of the regression model), does not give us sufficient support to make cuasal inference. 
+
+It is highly possible to obtain statistically signficiant estimate on some $X$ variables, but establishing the statement that $X$ cuases $Y$ needs more than the statistical evidence a regression model can provide. 
+
+To see some spurious correlations, check out [this website](http://tylervigen.com/spurious-correlations).   
+
+Too read a relatively easy read of an academic paper, please check [this link](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2933053). 
+
+
+
+

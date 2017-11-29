@@ -1,0 +1,414 @@
+---
+title: "Segmentation"
+author: "Xiaojing Dong and Michael Thomas"
+date: "10/26/2017 (added the application section)"
+output:
+  html_document: default
+  pdf_document: default
+graphics: yes
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Market Segmentation
+
+### Our goal: Divide a market into distinct subsets of customers. 
+- So that members are **heterogeneous across** segments but **homogeneous within** them.
+- Understanding the segments will allow us to tailor our marketing to each group of conumers and their wants/needs.
+
+### Possible ways to Group people:
+- Demographics
+- Geographic
+- Psychographics
+- Needs and Preferences
+  
+Needs and preferences is the best way to segment the market: for Marketing purposes, we want groups of people who will behave the same in the market place, rather than just being the same age (for example). 
+
+To conduct needs and preference based segmentation, (sometimes called behavior based segmentation/targeting), it contains two steps. 
+
+- First, using Clustering Analysis, we group people into segments, based on the similarities in their behaviors. The behaviors are usually discribed using multiple variables (high dimension). **In this step, we focus on "Homogeneous within".** 
+- Second, in order to find people who are in different segments, we would want to identify them based on their demographics. For example, if we know that all those customers in the first segment are younger customers, that would be helpful. **In this step, we focus on "Heterogeneous Across".** This can be achieved using **Discriminant Analysis**. 
+
+## An exampe data set
+
+Next, we are going to show you an example of conducting Needs and Preference (Behavior) - Based segmentation in two stages: first, clustering analysis, second, discriminant analysis. 
+
+Before opening the file, or conducting any R programming, a good practice is to get R ready by clearing prior memory and opening the packages we will need:
+
+```{r}
+rm(list=ls())       # Remove anything that might currently be in memory so we can start fresh.
+library(data.table) # Load the data.table package.
+library(MASS)       # Load the MASS package
+```
+The data.table package provides advanced capabilities of processing big data, so it it benefitial to get familiar with it. You can find a very useful [Data.table Cheat sheet here](https://s3.amazonaws.com/assets.datacamp.com/img/blog/data+table+cheat+sheet.pdf). It is less intuitive comparing to the functions provided by the basic R packages, which means it could be harder to learn. It is worthwhile to get yourself fmailiar with it, as it reduces programming time, and improves performance. 
+
+The MASS package is also a very useful stats package, so it is common practice to load these packages when we are doing data analysis. MASS stands for "Modern Applied Statistics with S", as R was developed from S. 
+
+And, consider the following data set:
+```{r}
+cmat <- fread('DurData_custpurchase.csv')
+```
+
+This `fread()` function is from the data.table package, and you will find it much faster than `read.csv()` function when you are loading a big data file. The data file is read into a variable named `cmat`. Here are a few functions to understand what `cmat` is. 
+
+```{r}
+class(cmat)
+dim(cmat)
+str(cmat)
+```
+
+- `class()` tells you the class of `cmat`, which is "data.table" and "data.frame", therefore you can use the functions designed for `data.table` and `data.frame`. 
+- `dim()` tells us the dimensionality of `cmat`, with `r dim(cmat)[1]` rows and `r dim(cmat)[2]` columns. 
+- `str()` gives you all the information above, in addition, it lists the variable names, and example data values for each variable. This helps you to get some sense about the data.  
+
+Now we have a quick look at the data, we need to understand where the data is from. 
+
+
+### Some questions you should answer about any new data set: 
+
+
+- What is the story behind the data, and how are these data generated?
+- Who or what does one row in the data represent?
+- How many observations are there?
+- What is the meaning of the variables (across the columns)?
+- What kind of data is in each variable? Numbers? Strings? Something else?
+
+Some of these questions can be answered with commands in R:
+
+```{r}
+cmat[,.N]       # This gives us the number of observations in the data set (how long it is)
+```
+
+This usage is specially provided for `data.table` in the data.table package. Adding a "." in front of N, tells us that it does not refer to the Nth column of `cmat`. You can obtain the number of rows in `cmat` using multiple ways, without using data.table, for example: 
+```{r}
+dim(cmat)[1]
+nrow(cmat)
+```
+
+
+Other information about the data may need to come from supporting documentation. For this data set, the documentation indicates that this data set is generated from the durable goods panel data. In that data set, the purchases of each household are recorded from December 1998 to November 2004, including the product category purchased and the amount paid at each purchase, in addition to the time of purchase. Aggregating that panel data into household level cross-sectional data, we get this dataset that recorded the total number of purchases and total amount spent during the data period for each household.  
+
+Each row corresponds to a different household, who are identified by their Household_ID. We also learn that for each household their total expenditures for a variety of categories are listed (e.g. E_cat2) along with the number of purchases for these categories (e.g. N_cat4). The remaining variables are easily interpreted by their variable names, and mostly correspond to demographic information (e.g. Household_Income).
+
+## Choose the basis variables:
+We need to select a set of variables we can use to perform segmentation. As mentioned earlier, we prefer to segment people based on their purchase behavior since this is most closely related to their needs/wants. 
+
+Let's use the "total expenditure" data for each category as our basis variables since these provide a good measure of consumer behavior. 
+
+Before we conduct the analysis, please answer the question: 
+
+> Q: Shall we also include the demographic variables in conducting the behavior-based segmentation analysis?
+
+
+Let's get the names of the variables we would like to use for the clustering analysis. 
+
+```{r}
+basisvars = names( cmat[, grep("E_", names(cmat)), with=FALSE ] )
+basisvars
+
+```
+
+Creating these new lists that contain the variables want to used as our basis is for convenience, and good coding style. This way we can just refer to the list, rather than having to type out all of the variable names every time we need them. You will see examples of this below.
+
+## Cleaning the data
+Before we try to segment the people in the data using their expenditure data we need to clean the data.
+
+### Problems we may find with the data:
+- For a given category, everybody might have spent the same amount. This would be a problem because we wouldn't be able to segment people using a variable that indicates that everyone is the same.
+- Some categories might greater variation in expenditures than others. When we perform our analysis, this would give greater weight to those categories with large variation, even though they may be no more informative about consumer preferences than categories with small variation.
+
+Let's check
+
+```{r}
+diag( var( cmat[, ..basisvars] ) )
+```
+From these results we can see that category 3 has no variation in expenditures. For this reason, we should  drop it from our basis variables:
+```{r}
+basisvars = basisvars[-3]   # This removes the element in the third position of our list
+```
+
+
+Also, note that the variance in some categories is much larger in some than other (e.g. category 6 vs category 13). To deal with this, let's create a new set of variables that all have an average value of zero, and a variance of one. By doing this, these new variables will contribute to our segmentation of consumers equally. This step is called "normalization".
+
+```{r, results = "hide"}
+# Create a list of new variable names: "_n" for "normalized"
+basisvars_n = paste0(basisvars, "_n")   
+# Assign normalized values to each of these new variables:
+cmat[, (basisvars_n) := lapply(.SD, function(x) (x- mean(x))/sd(x)), .SDcols=basisvars ]  
+dim(cmat)
+```
+
+
+```{r}
+# Check normalization
+diag( var( cmat[, ..basisvars_n] ) )
+colMeans(cmat[,..basisvars_n])
+```
+All the variance values are 1, and all the mean values are close to 0, so it looks like our normalization was successful.
+
+> Q: Why these mean values are not exactly 0?
+
+# Perform clustering analysis
+Now we are ready to perform the clustering analysis. Clustering Analysis is a type of **Unsupervised Learning**, using Maching Learning language. Regression is one of the most popular methods in **Supervised Learning**, where you have a Y variable and a bunch of X variables. In Unsupervised Learning, however, such Y variable does not exist. In clustering analysis, we are trying to find similar individuals into the same group, focusing on the variables describing each individual (or the features of each individual). You can think that only X variables exist, but no Y variable.  
+
+The two most commonly used algorithms for clustering analysis, including **K-Means** method and **Hierarchical Clustering**. 
+
+## K-Means
+
+The `kmeans()` command is built into base-R and provides an easy way of segmenting the consumers. In order to conduct k-means method, you need to first define the number of groups/segments you want, which is the K as referred in the name. 
+
+```{r, results = "hide"}
+# Run k-means command with 5 groups
+km <- kmeans( cmat[, ..basisvars_n], 5)
+# Add the k-means classifications to our data.table
+cmat[, seg := km$cluster]
+
+```
+
+We can take a look at the size of each segment
+```{r}
+km$size
+cmat[, .N, seg][order(-N)] # Number of observations in each cluster:
+```
+
+
+```{r}
+# Average expenditures for each cluster:
+cmat[, .(avg1 = mean(E_catg1_n), avg2 = mean(E_catg2_n)), seg]
+
+```
+
+```{r}
+cmat[, lapply(.SD,mean), seg, .SDcols = basisvars_n]
+```
+
+In this command, 
+
+- `.SD` tells you that I'm going to use all the columns, then later on `.SDcols` tells actually not all of the columns, but only the columns with the names that are listed in `basisvars_n`. In order to use `.SDcols`, you will need to have `.SD` first. 
+- `lapply()` tells you that I'm going to apply the function `mean()` for the columns specified by `.SD`
+
+
+
+
+## Hierarchical Clustering
+
+K-Means method requires to define the number of segments before conducting the analysis. Another method to conduct clustering analysis is Hierarchical Clustering. The output from a Hierarchical Clustering includes the results for 1 segment, 2 segments, 3 segments, ..., etc. The benefit is that Hierarchical Clustering (HC) allows us to decide the number of segments as well as the segment each member belongs to based on the results. The drawback is that it involves much more computation comparing to the K-Means method, and therefore consumes more computational time. It could be a problem, esp. when the size of data is big. 
+
+In HC, the idea is trying to put people that are close in "distance" together. To do that, we need to calculate the "distance" between any two consumers. The most common way to do that is Euclidean distance. Call each variable describing each customer $i$ as $x$, for example,   
+$x_{i1}$ refers to the number of products purchased by customer $i$ in category 1
+$x_{i2}$ refers to the number of products purchased by customer $i$ in category 2
+...
+$x_{i15}$ refers to the number of products purchased by customer $i$ in category 15
+$x_{j1}$ refers to the number of products purchased by customer $j$ in category 1
+$x_{j2}$ refers to the number of products purchased by customer $j$ in category 2
+...
+$x_{j15}$ refers to the number of products purchased by customer $j$ in category 15
+
+The Euclidean distance between two consumers $i$ and $j$ can be calculated as 
+$$d_{ij}=\sqrt{(x_{i1}-x_{j1})^2+...+(x_{i15}-x_{j15})^2}$$
+In the data set cmat, the number of consumers is $N$=`r cmat[,.N]`, to calculate the distance between any two consumers, we need to calculate $N\times(N-1)/2$=`r cmat[,.N]*(cmat[,.N]-1)/2` distance values. This dramatically increases the computational burden. 
+
+After calculating the distance between any two consumers, the WARD algorithm in a Hierarchical Clustering analysis will first get rid of the $\sqrt{()}$ sign first by taking the square of the distance values. These values also called the Error Sum of Squares (ESS).
+
+- It starts with every customer in 1 segment, total $N$=`r cmat[,.N]` segments. 
+- The first step will combine the two with the shortest distance, and the number of segments become $N-1$=`r cmat[,.N]-1` segments
+...
+- The next step will combine the two segments with the smallest ESS values together, and the number of segmetns will be reduced by 1
+...
+- Do this until the number of segments is reduced to 1. 
+
+To do that, we can use the following R code
+(To demonstrate the plot, we use only data from the first few customers)
+
+```{r}
+d=dist(cmat[Household_ID<100050000,..basisvars_n],method="euclidian")
+cmat[Household_ID<100050000,.N]
+fit = hclust(d,method="ward.D")
+plot(fit)
+
+```
+
+To determine the number of segments, we can examine the height either from the plot, or using the following function
+```{r}
+fit$height
+```
+
+Find a really high jump in the plot, then draw a horizontal line. The number of vertical lines crossing this line defines the number of segments. For example, if you think from 6.26 to 9.84 is a huge jump, which should not have happend, we chose the number of segments to be 4. To get the membership of each customer in 4 segments, we can use
+```{r}
+fitmem = cutree(fit,k=4)
+print(fitmem)
+addindx=cbind(seq(1:26),fitmem)
+print(t(addindx))
+```
+
+## Applications to Behavioral Based Segmentation
+
+The category numbers used in the analysis referred to the following 
+Category numbers are
+
+1. Audio - audio recording, speakers
+2. DVS - direct TV system/accessories, satellite dishes, digital video recorders, etc.
+3. EXPRESS 
+4. GIFT CARDS
+5. home ins - Home installations
+6. imaging - camera, camcorder, accessories
+7. intabgible - missing accessories
+8. majors - refrigerator, washers, dryers
+9. mobile - satelite radio, GPS
+10. music - music players, CDs
+11. other
+12. PST - computer accessories, cables, computer media, etc.
+13. pc hardware
+14. television
+15. video hardware - VCR
+16. wireless - handheld GPS, wireless phone, long distance service
+
+Let's check back what we obtained from the K-means clustering analysis, when using 5 clusters and the basis variables are the total expenditures in each category. 
+
+```{r}
+cmat[, lapply(.SD,mean), seg, .SDcols = basisvars_n]
+```
+
+Segment 1 has the highest average value for total expenses in category 5 (home installations)
+Segment 2 has the highest average value for total expenses in category 13 (PC hardware)
+Segment 3 has the highest average value for total expenses in category 9 (mobile)
+Segment 4 has all the average total expenses to be negative, indicating this is a segment with not customers who do not purchase much
+Segment 5 has the highest average value for total expenses in category 12 (computer accessories)
+
+What can you think of the applications of such findings?
+
+First application using segmentation is targeting. Now the retailer is working with Dell and is planning to run a holiday promotion, which segment should they target to? 
+Maybe segment 2? 
+
+Now, let's find out who are these people by taking a look at the demographic variables averages in each segment. 
+
+```{r } 
+demochar = names(cmat[,33:35])
+cmat[, dm := 0] #first define a variable indicating missing variables
+cmat[is.na(Household_Income)==T | is.na(Age_Household_Head)==T | is.na(Number_Of_Kids)==T, dm :=1]
+cmat[dm==0, lapply( .SD , mean) , .SDcols = demochar , seg][order(Household_Income)]
+```
+
+
+Segment 2 seems to be the one with the highest average household income, and also the highest in the average age of the household head. Given the limitations in the data, these are the only three demographic variables that we have. 
+
+### Another application:
+
+A PDA company designed a new PDA, with the following features: 
+
+- Instant communication for voice and data
+- Cell phone, pager, fax and e-mail, and instant messaging
+- PIM functions
+- Digital voice recorder
+- Enabled voice commands
+- PalmOS application base.
+
+To determine where to find the potential customers or the target market, the company contracted a consulting service company, and collected answers to the following survey questions
+
+X1. Whenever new technologies emerge in my field, I am among the first to adopt them.   
+X2. How often do you use a pager or an Instant Messaging service?   
+X3. How often do you use a cell phone?   
+X4. How often do you use personal information management tools; e.g., scheduler, contact-management tools, to-do list? While away from your office (including remote locations)...   
+X5. How often do others send you time-sensitive information?   
+X6. How often do you have to send time-sensitive information?  
+X7. How often do you need remote access to information?   
+X8. How important is it for you to share information rapidly (e.g., synchronize information) with other people, e.g., colleagues?   
+X9. How important is it for you to view information on a large-sized, high-resolution display?   
+X10.How important is it for you to have constant access to e-mail?   
+X11.How important is it for you to have permanent Web access; e.g., real-time stock prices, news?   
+X12.How important is it for you to use multimedia features; e.g., playing of music, video and games?   
+X13.How important is it for you to have a communication device that is not bulky? 
+How much would you be willing to pay for a palm-sized PDA with the following features: instant communication from PDA to PDA, cellular phone, instant messaging, instant file sharing, e-mail, Web access, fax, personal information management features (e.g., scheduler, calculator, address book)?   
+X14.Monthly price (for all services that you use)?   
+X15.Invoice price for the PDA device with all the features?   
+
+In addition, they also collected the some basic demographic information, as well as the types of magazines they read. 
+
+Let's check out the data
+
+```{r}
+pdamat <- fread('PDA_Data.csv')
+pda_basisvars = names( pdamat[, 2:16, with=FALSE ] )
+pda_demogvars = names( pdamat[, 17:33, with=FALSE])
+pda_basisvars
+pda_demogvars
+```
+
+We are going to follow two steps to address the business question: 
+1. We segment the market based on the survey data we collected, which describes the customers usage behavior of a PDA.
+2. We try to match the features of the new PDA with the desired usage of the different segments, and identify the segment who are most likely to enjoy the product. 
+3. We try to understand who are these customers that are likely to enjoy the product and find a way to market the product to them. 
+
+####Step 1 - Clustering analysis
+
+Now, let's conduct k-means clustering based on the basis variables
+```{r}
+pda_km = kmeans(pdamat[, ..pda_basisvars],4)
+pdamat[, seg := pda_km$cluster]
+a=pdamat[, lapply(.SD, mean), .SDcols = pda_basisvars, seg]
+print(t(a))
+```
+
+> Q: No difference across multiple segments? Something wrong?
+
+Now the segmentation results are completely driven by one variable! We need to rescale the data first!
+
+```{r}
+
+pda_basisvars_n = paste0(pda_basisvars, "_n")
+pdamat[,(pda_basisvars_n) := lapply(.SD, function(x) (x- mean(x))/sd(x)), .SDcols=pda_basisvars]
+
+pda_km = kmeans(pdamat[, ..pda_basisvars_n],4)
+pdamat[, seg := pda_km$cluster]
+pdamat[, .N, seg]
+a=pdamat[, lapply(.SD, mean), .SDcols = pda_basisvars_n, seg]
+print(t(a))
+```
+#### Step 2: find the segment
+
+> Q: which segment do you think we should market to?
+
+Let's try to match the featuers provided by the product, and the features seeking by the different segments. 
+
+#### Step 3. who are they?
+
+With the segmentation resutls for the customers, we can check the demographic variable values for each segment using: 
+
+```{r}
+a=pdamat[, lapply( .SD , mean) , .SDcols = pda_demogvars, seg][order(seg)]
+print(t(a))
+```
+
+Based on this, we can define a marketing strategy to reach the desired segment of the market. 
+
+
+
+# Discriminant Analysis
+
+Using Clustering Analysis (either K-Means or Hierarchical Clustering), we can get an additional variable, indicating the cluster (group) each customer belongs to. In that step, we try to find those that are similar in each cluster, focusing on the **Homogeneous Within**, based on the similarities among each customer's behaviors. In marketing, just knowing that we have these different groups of customers differ in their activities are not enough. Suppose we want to reach one of these segments, it would be really hard to identify them. The best way to find customers you desired is based on the demographics. We need to know across these segments we identified, in which demographics are they mostly different. For example, are these different segments differ in their age, or income? (see the NYTimes article for an example in political views.) To do that, we use **Discriminant Analysis**.
+
+To gain some understanding of DA, take a look at [this article on NYTimes](https://www.nytimes.com/interactive/2017/10/05/upshot/gun-ownership-partisan-divide.html). (Ignore the political debate, focus on the DA.)
+
+Now, we will perform discrimintant analysis, using the `lda()` function, provided by the MASS package. LDA stands for Linear Discriminant Analysis. 
+
+The idea is that we know the segment each customer belongs to, we want to find out among all the demographic variables, which variables are more useful to distinguish them across segments. The LDA is quite similar to the linear regression model. In LDA, the Y (dependent) variable is D - which segment each person belows to, and the X variables are the demographic variables, we try to see which X variable has strong marginal impact on D. In other words, we can have a model 
+$$D=\alpha_1x_1+\alpha_2x_2+...+\alpha_kx_k $$
+If there are two segments, we need to find a cutoff points. If the right hand side calculation is below the cutoff, the customer belongs to segment 1, otherwise, he/she belongs to segment 2. If we have three segments, then we need to find two cutoff points. So, the LDA not only looks for the values of the $\alpha's$, but also the cutoff values. 
+
+
+```{r}
+fit <- lda(seg ~ Household_Income+Age_Household_Head+Number_Of_Kids, 
+              data=cmat, na.action="na.omit", CV=TRUE )
+ct <- table(cmat[dm==0, seg], fit$class)
+diag(prop.table(ct, 1))
+
+# total percent correct
+sum(diag(prop.table(ct)))
+
+```
+
+
+

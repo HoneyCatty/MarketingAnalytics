@@ -1,0 +1,236 @@
+---
+title: "Targeting and Binary Logit (Logistic Regression) Model"
+author: "Xiaojing Dong"
+date: "10/27/2017"
+output:
+  html_document
+
+---
+
+We talked about how to segment the market based on recorded behaviors by customers, and applying clustering analysis. The behavioral based segmentation provided a better way of understanding your customers, and segment them, as comparing to the traditional way of segmenting the customers based on demographics. Behavioral segmentation allows company to choose to target the right segment for the product they can offer, and the features that match the needs of the segments. It is often used in product/market development. In marketing, this is also called the segmentation level targeting, where a particular segment was chosen for targeting, rather than choosing individuals.
+
+In some other cases, if individual level targeting is possible, it is always benefitial to choose individual level targeting over segment level targeting. It is especially true in online marketing, where the company has 
+
+- detailed information for each customer
+- feasible ways to provide different offerings across indivdiual customers. 
+
+In the online world, those two conditions are very easy to be satisfied. Even in the traditional marketing, it sometimes is possible, such as database marketing in retailing.  
+
+In Database Marketing, companies have detailed information about what previous products or services each customer has purchased. Based on this information, companies can conduct modeling analysis in order to identify the right customers to target for a particular marketing program, such as sending the coupons or a particular promotional event. 
+
+The example we use here is Santa Clara development office, where they keep a database of SCU alumni. At the reunion of 2014, knowing that the alumni who are most likely to come back to school are those who graduated in the years ending with "9" or "4"s, the office put together a sample data set of those alumni, and would like to create a list of possible alumni who are likely to donate, in order to target them with specially designed promotion materials, encouraging them to donate to the university. 
+
+To do that, we are going to apply a modeling, Binary Logit model, also called logistic regression. It involves the following steps: 
+
+- First, develop a model using the past donation information among these alumni.   
+- Second, based on the estimated model, predict each alumnus or alumna's propensity to donate among those who have never donated, or calculating the **Propensity Scores**   
+- Third, send the promotion materials to those who are predicted to have the highest propensity to donate. 
+
+This is "Behavioral-Based Individual Level Targeting". 
+
+Let's first get the data, the excel sheet has the detailed explanations of the variables. 
+
+```{r}
+
+rm(list=ls())       # Remove anything that might currently be in memory so we can start fresh.
+setwd("/Users/meina/Desktop/MarketingAnalysis/Lecture 5 Binary Logit and Targeting")
+
+library(data.table) # Load the data.table package.
+library(MASS)       # Load the MASS package
+
+reuniondata <- fread('Reuniondata_inclass.csv')
+```
+
+Similar to setting up a regression model, we need to first find the dependent variable, and choose the independent variables, and some nonlinear transformations of the variables, if needed. 
+
+We choose the variable "total number of donations" as the $Y$ variable. In a Binary Logit model, the dependent variable needs to be a dummy variable, taking only values 0 or 1. We change that and call it `Choice`
+
+```{r}
+reuniondata[,Choice:=as.numeric(donatesum>0),]
+dim(reuniondata)
+```
+As a starter, we use all the other variables as $X$ variable. 
+
+```{r }
+d = data.frame(y=reuniondata[,17],reuniondata[,4:16])
+bl_result = glm(Choice~., data=d, family="binomial")
+summary(bl_result)
+```
+
+
+The predicted probabilities can be obtained using 'bl_result$fitted.values'
+```{r}
+reuniondata[,fittedval:=bl_result$fitted.values]
+a=reuniondata[,mean(fittedval),by=Choice]
+a
+```
+
+Among those who donated (as indicated in the data) the model predicted the average donation  probability is `r a$V1[2]`, which is much higher than the predicted average probability of those who did not `r a$V1[1]`. From this, at least the model is not too much off. 
+
+With one model to start with, we can try different model specifications, by adding or dropping variables, creating interactions, creating new variables, etc. Using the AIC values (discussed below), or out of sample measures, we can choose the model we really like. 
+
+In the first step, we chose the model we like, getting to the next step. 
+
+In the second step, we predict those who have never donated, and calculate the probability to donate for each individual.
+
+Finally, in the third step, we chose a cutoff and send the promotional material to those we selected. 
+
+** The End **
+
+
+
+
+
+
+## Binary Logit Model
+
+Binary Logit model is very similar to Regression model that we studied before. It requires a dependent variable $(Y)$, and some independent variabls $(X)$. In the case of BL model, the dependent variable takes binary values 0 and 1. In modeling, we find ourselves very often dealing with such binary dependent variables. A few examples listed here 
+
+- whether to purchase, 1=Yes, 0=No
+- whether to register, 1=Yes, 0=No
+- whether to vote for Democratic party =1, Republican party = 0
+
+...
+
+In these cases, we try to understand how some of the X variables influence the dependent variable, we use similar method as the regression model. 
+
+### Model Specifications
+
+In regression model, the dependent variable $Y$ is a continuous variable, which can in most cases take any possible values. In Binary Logit model, the $Y$ variable can take only values 0 or 1. Otherwise, it is very similar to the regression model. Therefore, **the Binary Logit model is also called Logistic Regression**. In Machine Learning, it is also another very popular supervised learning method. 
+
+To set up the model, 
+$$Y\sim\beta_0+\beta_1x_1+\beta_2x_2+...+\beta_kx_k+\epsilon$$
+It is clear that we cannot use "=", as the left hand side takes only two possible values 0 or 1; and the right hand side values can take any possible value. Such a linear regression model does not work. The Binary Logit model takes some function of both sides, and becomes
+$$P(Y=1)=\frac{exp(V)}{1+exp(V)}$$
+Here 
+$$V =\beta_0+\beta_1x_1+\beta_2x_2+...+\beta_kx_k$$. 
+
+On the left hand side, we calculate the probability of $Y$ being 1, instead of using the actual Y value. Any probability value is in the range of $[0,1]$. The right hand side takes a nonlinear transformation of the function $\beta X$, which is also in the range of $[0,1]$. 
+
+> Q: How to calculate $P(Y=0)$ ?
+
+### The Concept of Likelihood Function
+
+To estimate the model, we need to connect the model with the real data. We use the concept of Likelihood. 
+
+Likelihood calculates the probability that the data happens. For example, in the reuniondata, our first three data points take the values of `r reuniondata[1:3,Choice]`. 
+
+- As the $Y$ for the first row is 1, the likelihood value for the first data point is $P(Y=1)=\frac{exp(\beta X1)}{1+exp(\beta X1)}$. Here $X1$ refers to the X variables in the first row.
+- As the $Y$ for the second row is 1, the likelihood value for the second data point is $P(Y=1)=\frac{exp(\beta X2)}{1+exp(\beta X2)}$. Here $X2$ refers to the X variables in the second row.
+- As the $Y$ for the third row is 0, the likelihood value for the third data point is $P(Y=0)=1-P(Y=1)=1-\frac{exp(\beta X3)}{1+exp(\beta X3)}=\frac{1}{1+exp(\beta X3)}$. Here $X3$ refers to the X variables in the third row.
+
+The model is specified as $P(Y=1)$. When estimating the model, we need to calculate the likelihood function of the data, in that case, we take a look at the actual $Y$ value, and depending on the $Y$ value, the likelihood function takes either $P(Y=1)$ or $P(Y=0)$. 
+
+The likelihood function for each data point $i$ is calculated as 
+$$l_i=P_i\times Y_i+(1-P_i)\times(1-Y_i)$$
+
+In this equation, 
+- When $Y_i=1$, which means if data point $i$ made a purchase, $L_i=P_i$, the likelihood is the probability of making a purchase. 
+- When $Y_i=0$, which means if data point $i$ didn't make a purchase, $L_i=1-P_i$, the likelihood is the probability of not making a purchase.
+
+The likelihood function for all the data points (rows) is the product of all the likelihood values for each data points, that is
+$$L=\prod_{i=1}^{i=N}l_i$$
+
+When estimating the model, we are looking for the parameters that maximize the joint likelihood function of all the data points. This is also called the **Maximum Likelihood Estimation (MLE)**.
+
+> Q: why "maximize", not "minimize"?
+
+If we try to maximize the function $L$, One issue is that given the $l_i$ is a probability, always in the range of $[0,1]$, when $N$ is reasonably big, say 100, the value of $L$ would become very close to 0. This may cause numerical problem, as computer may treat it as 0. To avoid that, we usually calculate the $ln$-transformation of the $L$, and call it the **ln-likelihood** function
+$$lnL=ln(L)$$
+
+
+MLE is a very commonly used method in estimating, esp. nonlinear models. When you have a nonlinear model, all you need to do is to generate the likelihood function based on the probability assumptions used when setting up the model. Using this method, you can solve any sophisticated model you can put out, as long as the likelihood function can be specified or simulated.  
+
+This is a very powerful method, with many great features comparing to alternative methods. In R, for Binary Logit model and Poisson model (not discussed) here, the method is implemented in the function `glm()`. 
+
+
+### Model Fit Measures
+
+It is critical that an important statistical measure exists to compare two different models. There are two types of model fit measurements, in-sample fit and out-of-sample fit. 
+
+In-sample fit refers to those measures that use the estimation sample to evaluate the models. Out-of-sample fit refers to those measures that use a different data sample to evaluate the models. Next, we'll discuss each type in more details. 
+
+#### In-sample Fit
+In Linear Regression model, we learned to check how the model fits the data using the measurement called $R^2$, with possible value ranged from 0 to 1. A model with higher $R^2$ value is considered to fit the data better than a model with a lower $R^2$ value. How do we compare two binary logit model speicifications and determine which one fits the data better?
+
+We use the likelihood value from the model, using the function
+```{r}
+logLik(bl_result)
+```
+
+It prints out the $ln(likelihood)$ value for the model.
+
+> Q: why it is negative? What's the lowest possible value? What's the highest possible value?
+
+The above function also prints out the `df=14`, which indicates the number of parameters. ln-likelihood value has a similar property as the $R^2$ value, in the sense that the more parameters the model takes, the higher ln-likelihood value it gets. Therefore it is meaningful to know how many parameters are included in the model. 
+
+In linear regression, to penalize the model with too many parameters, we use the adjusted $R^2$. In logistic regression model, to penalize the model with too many parameters, we use AIC (Akaike Information Criteria) number, which takes into consideration of the number of parameters. It is calculated using the following equation 
+
+$$AIC = -2\times ln(likelihood)+2\times df=-2(ln(likelihood)-df)$$
+
+Note the -2 in the front, the model with **lower** AIC fits the data better. 
+
+#### Out of Sample Fit
+In order to conduct out-of-sample analysis, we need to split the data set into two parts, one for estimating the model, and the other for testing the model. We call them **estimation sample** and **test sample**, or **training data** and **testing data**. 
+```{r}
+idTrn = 1:1000  # row index for the training data
+idTst = !(1:nrow(reuniondata) %in% idTrn)  # row index for the testing data
+
+blTrn = glm(Choice~., data=d, family="binomial", subset = idTrn)
+summary(blTrn)
+
+predTst = predict(blTrn, d[idTst,], type="response")
+```
+
+We can then compare the predicted values with the actual values. There are multiple ways to do this. 
+
+##### Method 1. Create the confusion matrix
+
+To do that, we need to define a cutoff, so that if predicted probability is above the cutoff, we consider it to be 1; and if below, 0. 
+
+```{r}
+thresh  <- 0.5            # threshold for categorizing predicted probabilities
+predFac <- cut(predTst, breaks=c(-Inf, thresh, Inf),labels=c("0","1"))
+table(d[idTst,1],predFac)
+```
+
+##### Method 2. Calculate the log-likelihood
+```{r}
+yActual = d[idTst,1]
+lnlike = sum(log(predTst*yActual+(1-predTst)*(1-yActual)))
+lnlike
+```
+
+
+
+
+### Interpretation of the Model Parameters
+
+In a linear regression model, such as 
+$$y=\beta_0+\beta_1x_1+\beta_2x_2+...+\epsilon$$
+The parameter estimate for $\beta_1$ means that holding everything else constant, a unit change in $x_1$ will leads to $\beta_1$ increase in $y$.
+
+In a logistic regression model as specified above, it is a nonlinear model, the impact on $y$ is not as easy. In this case, we need to look at its impact on the predicted probability $P(Y=1)$. The parameter estimate for $\beta_1$ means that holding everything else constant, a unit change in $x_1$ will leads to $\beta_1$ increase in $V$, not the $P(Y=1)$. In order to check how much change in the probability, we need to calculate the difference in probability for these two different values of $V$'s. 
+
+Denote the V value before the 1 unit level change in $x_1$ as $V0$, and the V value after the 1 unit level change in $x_1$ as $V_1$, for which  
+$$V_1=V_0+\beta_1$$
+Then we can calculate the changes in probabilities, which will be 
+$$\Delta P=P_1-P_0=\frac{exp(V_1)}{1+exp(V_1)}-\frac{exp(V_0)}{1+exp(V_0)}$$
+
+Holding everything else constant, the unit change in $x_1$ leads to the change in probability as $\Delta P$, as calculated in this equation, which could be very different from the value of $\beta$.
+
+For example, if I want to evaluate how much the donation probability will be changed as being a sport alum, vs. those who are not. One way we can do that is
+
+- First step, set all the other variables at its mean value
+
+```{r}
+mnxs = colMeans(d[,2:14])
+useid = c(2:14)
+useid = useid[-2]
+V0=bl_result$coefficients[1]+sum(bl_result$coefficients[useid]*mnxs[-2])
+V1 = V0+bl_result$coefficients["SportsAlum"]
+dP = as.numeric(exp(V1)/(1+exp(V1))-exp(V0)/(1+exp(V0)))
+dP
+```
+
+

@@ -1,0 +1,107 @@
+---
+title: "Binary Logit Model Homework"
+author: "(your name)"
+date: "11/4/2017"
+output:
+  html_document: default
+graphics: yes
+urlcolor: blue
+---
+
+Let's try to do the homework using R markdown. I've decided do this for two reasons:    
+1. It is convenient that you have almost all the R code ready for you to do the homework, to save you time on looking for R help. 
+2. R markdown is a great/fancy tool for reports and notes, as it combines R programming with texts, equations, etc. It is benefitial to learn about it. 
+
+I do not expect you to need this, but if you do, here is a handy [R Markdown Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2016/03/rmarkdown-cheatsheet-2.0.pdf)
+
+After you edit the R Markdown file by filling in the code and results for the homework questions below. Click on the button "Knit" on the top left of R studio, or you could choose from the dropdown list to click on "Knit to html", "Knit to pdf", "Knit to word", which will generate the report in each format. Depending on your computer, "Knit to pdf" may or may not work. 
+
+The you can print out your homework in html/pdf/word format. 
+
+
+
+In the class notes, we read in the SCU reunion data
+```{r}
+rm(list=ls())       # Remove anything that might currently be in memory so we can start fresh.
+library(data.table) # Load the data.table package.
+library(MASS)       # Load the MASS package
+
+reuniondata <- fread('Reuniondata_inclass.csv')
+```
+
+You can check out the variables names using
+```{r}
+names(reuniondata)
+```
+The interpretation of each variable is in the file Reuniondata_inclass.xlsx, in a separate sheet. Please check that sheet out to understand exactly the meansing of each variable. 
+
+
+We first created the $Y$ variable, based on the variable "donatesum", indicating the "total number of donations". As our first order interest is whether someone donate or not, rather than how much they donate, we decided to create a choice variable, as $Y$ for the binary logit model, and added the variable to the last column in the `reuniondata` datatable. 
+
+```{r}
+reuniondata[,Choice:=as.numeric(donatesum>0),]
+dim(reuniondata)
+```
+
+As a starter, we estimate the binary logit model using all the other variables as $X$ variable. To do that, I first created a data frame, that contains the choice variable, and all the $X$ variables. 
+
+```{r }
+d = data.frame(y=reuniondata[,17],reuniondata[,4:16])
+```
+
+Before using the data, I first split the data into training set with the first 3000 data points and testing data with the rest.  
+
+```{r }
+idTrn = 1:3000  # row index for the training data
+idTst = !(1:nrow(reuniondata) %in% idTrn)  # row index for the testing data
+
+blTrn_basic = glm(Choice~ ., data=d, family="binomial", subset = idTrn) #using only training data. Note that the "." after "~" meaning using all the rest of the data in data frame "d" except the variable "Choice". This is way we created the "d" dataframe, so that we do not need to list all the other variables we need in the model. but you can always use the following command, if you do not want to use "."
+
+#blTrn_basic = glm(Choice~ SpouseAlum+SportsAlum+UGAlumAwards+OtherUGAct+EverAssigned+BoardMember+ChildAlum+ParentAlum+SiblingAlum+GradDegree+TotalReunions+OnePlusEvents+Years.Lapsed, data=d, family="binomial", subset = idTrn)  #for running additional models, you may find it easier to base your code on this code. 
+
+summary(blTrn_basic)
+```
+
+> Q1: Please commet on the estimation results, by examining all the parameters that are statistically significant, and whether the sign makes sense?
+
+
+> Q2: The variable with the highest t-value is "number of years elapsed since last donation". It is very negative, and the t-value has an absolute value that is much higher than the other t-values. That is usually a sign of a problem. What could be the problem here? Think about the model estimation is trying to match the data (values in Y).
+
+
+
+> Q3: Now let's re-estimate the model using some different specifications that you can come up with. Estimate at least 2 more models. I have couple of suggestions:   
+
+- Alternative model 1: drop the varaible "Years.Lapsed"   
+- Alternative model 2: There are quite a few dummy variables, you can comebine them and create a new dummy variable 
+
+```{r}
+famAlumdata = reuniondata[,.(SpouseAlum,ChildAlum,ParentAlum,SiblingAlum)]
+FamilyAlum = as.numeric(rowSums(famAlumdata)>0)
+```   
+
+- Alternative model 3: Based on the variable `RYCohort`, you can create a variable to calculate the number of years since graduation, then add this variable to the model, and see whether the estimation results improve. 
+When estimating these other models, use the second `glm()` function, and then adding or dropping variables
+
+```{r}
+yearsgrad = 2014-reuniondata[,RYCohort]
+
+```
+
+
+> Q4: Based on the AIC values, which is the model that fits the data the best? Is there a reason that you do not like the model - maybe some estimate have the wrong sign?
+
+
+> Q5: Now let's try out-of-sample test on the testing data set. Using each of the three models you estimated above, calculate the ln-likelihood for the testing data. To do that for the basic model, you can use
+
+
+```{r}
+yActual = d[idTst,1] #get the actual value for the choice variable
+predTst_basic = predict(blTrn_basic, d[idTst,], type="response") #use the model results in blTrn_basic, to predict the probability of Y=1 for each data point in the testing data set
+
+lnlike_basic = sum(log(predTst_basic*yActual+(1-predTst_basic)*(1-yActual))) #using the predicted probability that Y=1, and the actual data, can calculate the ln-likelihood for all the data points
+lnlike_basic
+```
+
+> Repeat the above code for your two additional models, and compare the results and conclude which model is best for the out-of-sample test? Comment on are there things you do not like the chosen model?
+
+
