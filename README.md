@@ -1,3 +1,22 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Marketing Analytics</title>
+</head>
+<body>
+
+<h1>COURSE DESCRIPTION </h1>
+
+<p>The past couple of decades have witnessed an unprecedented “explosion” of data availability, due largely to advances in computing and storage technologies. More and more success stories have been reported in books and newspapers, elaborating on how companies benefit from decisions made on the basis of data analysis. Such news has attracted more companies to look for analytic talent capable of sifting through data with statistical models and translating it into guidance for business decisions. </p>
+
+<a href="https://www.w3schools.com">This is a link</a>
+
+</body>
+</html>
+
+
+
 # Welcome to Marketing 3597: Marketing Analytics Pages
 ## COURSE DESCRIPTION  
    The past couple of decades have witnessed an unprecedented “explosion” of data availability, due largely to advances in computing and storage technologies. More and more success stories have been reported in books and newspapers, elaborating on how companies benefit from decisions made on the basis of data analysis. Such news has attracted more companies to look for analytic talent capable of sifting through data with statistical models and translating it into guidance for business decisions. 
@@ -28,6 +47,9 @@
       2) **Principles of Marketing Engineering**, first or second edition By the same authors: Gary L. Lilien, Arvind Rangaswamy and Arnaaud De Bruyn, Trafford Publishers.  
       Some of the other materials load automatically with the software, and still more will appear via dedicated Google Drive. Everything will be in PDF, and there will be no additional “coursepack”.  
     2. Get ready with your **R programming** environment. Please refer to the handouts on how to get started on that.   
+    
+    
+
  
 ### Markdown
 
