@@ -22,8 +22,13 @@
   The basic pedagogical approach is to employ a mix of learning methods, including lectures, class discussions, software tools, cases, and assigned readings. Class sessions will be devoted to probing, extending and applying the material in the readings and the cases. One could call this “Tell-Show-Do”, a sequence providing hands-on experience in using the course materials for making marketing decisions. Lectures (always supplemented by the text) will cover the concepts and models you need in order to understand – and to apply – a scientific approach to marketing. Applications are illustrated in the cases, readings, and the examples; the software tools allow for hands-on opportunities to apply the concepts and models to resolve real-life marketing problems. 
 ## PREREQUISITES
   MKTG 3552. 
-
-
+## TEXTBOOK AND COURSE MATERIALS  
+   1. **Suggested text book**: Either one of the following two books is fine: 
+      1) **Marketing Engineering ISBN: 1412022525**
+      2) **Principles of Marketing Engineering**, first or second edition By the same authors: Gary L. Lilien, Arvind Rangaswamy and Arnaaud De Bruyn, Trafford Publishers.  
+      Some of the other materials load automatically with the software, and still more will appear via dedicated Google Drive. Everything will be in PDF, and there will be no additional “coursepack”.  
+    2. Get ready with your **R programming** environment. Please refer to the handouts on how to get started on that.   
+ 
 ### Markdown
 
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
