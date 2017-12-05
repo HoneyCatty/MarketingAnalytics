@@ -1,105 +1,83 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="1561.1">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
+<style>
+div.container {
+    width: 100%;
+    border: 1px solid gray;
+}
+
+header, footer {
+    padding: 1em;
+    color: white;
+    background-color: black;
+    clear: left;
+    text-align: center;
+}
+
+nav {
+    float: left;
+    max-width: 160px;
+    margin: 0;
+    padding: 1em;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+   
+nav ul a {
+    text-decoration: none;
+}
+
+article {
+    margin-left: 170px;
+    border-left: 1px solid gray;
+    padding: 1em;
+    overflow: hidden;
+}
+</style>
 </head>
 <body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1">&lt;style&gt;<span class="Apple-converted-space"> </span></p>
-<p class="p1">.flex-container {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>display: -webkit-flex;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>display: flex; <span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">    </span>-webkit-flex-flow: row wrap;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>flex-flow: row wrap;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>text-align: center;</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">.flex-container &gt; * {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>padding: 15px;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>-webkit-flex: 1 100%;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>flex: 1 100%;</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">.article {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>text-align: left;</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">header {background: black;color:white;}</p>
-<p class="p1">footer {background: #aaa;color:white;}</p>
-<p class="p1">.nav {background:#eee;}</p>
-<p class="p2"><br></p>
-<p class="p1">.nav ul {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>list-style-type: none;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>padding: 0;</p>
-<p class="p1">}</p>
-<p class="p1">.nav ul a {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>text-decoration: none;</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">@media all and (min-width: 768px) {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.nav {text-align:left;-webkit-flex: 1 auto;flex:1 auto;-webkit-order:1;order:1;}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.article {-webkit-flex:5 0px;flex:5 0px;-webkit-order:2;order:2;}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>footer {-webkit-order:3;order:3;}</p>
-<p class="p1">}</p>
-<p class="p1">&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;div class="flex-container"&gt;</p>
-<p class="p1">&lt;header&gt;</p>
-<p class="p1">&lt;h1&gt;&lt;strong&gt;Marketing 3597: Marketing Analytics&lt;/strong&gt;&lt;/h1&gt;</p>
-<p class="p1">&lt;h2&gt;</p>
-<p class="p1">Leavey School of Business&lt;br&gt;<span class="Apple-converted-space"> </span></p>
-<p class="p1">Santa Clara University<span class="Apple-converted-space"> </span></p>
-<p class="p1">&lt;/h2&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;/header&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;nav class="nav"&gt;</p>
-<p class="p1">&lt;ul&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;li&gt;&lt;a href="/Others/Introduction.html"&gt;Introduction&lt;/a&gt;&lt;/li&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;li&gt;&lt;a href="/Others/LectureIndex.html"&gt;lectures&lt;/a&gt;&lt;/li&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;li&gt;&lt;a href="/Others/LectureIndex.html"&gt;Dataset&lt;/a&gt;&lt;/li&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;li&gt;&lt;a href="/Others/ContactInformation.html"&gt;Contact&lt;/a&gt;&lt;/li&gt;</p>
-<p class="p1">&lt;/ul&gt;</p>
-<p class="p1">&lt;/nav&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;article class="article"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;h1&gt;Welcome to Marketing Analytics Course&lt;/h1&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;p&gt;This course is designed in response to the need for analytic talent in the marketplace. The overarching purpose of this course is to convey the benefits of a systematic, analytical approach to marketing decision-making, and to build skills, knowledge and confidence in undertaking such analyses.<span class="Apple-converted-space">  </span>&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;p&gt;</p>
-<p class="p1">This course is not a statistic or math course, focusing on pure technical details and equation derivations. It is a Marketing Analytics course, aiming to prepare future managers who&lt;br&gt;<span class="Apple-converted-space"> </span></p>
-<p class="p1">(1) appreciate the importance of competitive advantages leveraged by analytics; &lt;br&gt;</p>
-<p class="p1">(2) understand the existence of the tools, the advantages and limitations of each tool; &lt;br&gt;<span class="Apple-converted-space"> </span></p>
-<p class="p1">(3) can apply these tools, interpret the input and communicate the output from these tools and models, and apply them to assist business decisions.<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space"> </span>&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space"> </span>&lt;p&gt;&lt;strong&gt;Here is all the lectures&lt;/strong&gt;&lt;/p&gt;</p>
-<p class="p1">&lt;a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%201%20Introduction%20and%20R%20starter/R%20Starter%20and%20Statistics%20Review.html"&gt;Lecture 1 Introduction and R starter&lt;/a&gt;</p>
-<p class="p1">&lt;a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%202%20Regression%20Analysis/R_regression.html"&gt;Lecture 2 Regression Analysis&lt;/a&gt;&lt;br&gt;</p>
-<p class="p1">&lt;a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%203%20Marketing%20Mix%20Modeling/R_MMM.nb.html"&gt;Lecture 3 Marketing Mix Modeling&lt;/a&gt;&lt;br&gt;</p>
-<p class="p1">&lt;a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%204%20Segmentation/Cluster_Lecture.html"&gt;Lecture 4 Segmentation&lt;/a&gt;&lt;br&gt;</p>
-<p class="p1">&lt;a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%205%20Binary%20Logit%20and%20Targeting/Binary_Logit.html"&gt;Lecture 5 Binary Logit and Targeting&lt;/a&gt;&lt;br&gt;</p>
-<p class="p1">&lt;a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%206%20Bass%20Model%20and%20Forecasting/Forcast_Bass_Lecture.htm"&gt;Lecture 6 Bass Model and Forecasting&lt;/a&gt;&lt;br&gt;</p>
-<p class="p1">&lt;a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%207%20MNL%20model%20and%20Choice/MNL_model2.html"&gt;Lecture 7 MNL model and Choice&lt;/a&gt;&lt;br&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;/article&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;footer&gt;</p>
-<p class="p1">Copyright &amp;copy;xdong1@scu.edu</p>
-<p class="p1">&lt;/footer&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+
+<div class="container">
+
+<header>
+   <h1><strong>Marketing 3597: Marketing Analytics</strong></h1>
+   <h2>
+   Leavey School of Business<br>
+   Santa Clara University
+   </h1>
+</header>
+  
+<nav>
+  <ul>
+    <li><a href="#">Introduction</a></li>
+    <li><a href="#">Lecture</a></li>
+    <li><a href="#">Datasets</a></li>
+    <li><a href="#">ContactInfo</a></li>    
+  </ul>
+</nav>
+
+<article>
+  <h1>Welcome to Marketing Analytics Course</h1>
+  <p>This course is designed in response to the need for analytic talent in the marketplace. The overarching purpose of this course is to convey the benefits of a systematic, analytical approach to marketing decision-making, and to build skills, knowledge and confidence in undertaking such analyses.</p>
+ <h1>These are all lectures.</h1>
+<a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%201%20Introduction%20and%20R%20starter/R%20Starter%20and%20Statistics%20Review.html">Lecture 1 Introduction and R starter</a>
+<a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%202%20Regression%20Analysis/R_regression.html">Lecture 2 Regression Analysis</a><br>
+<a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%203%20Marketing%20Mix%20Modeling/R_MMM.nb.html">Lecture 3 Marketing Mix Modeling</a><br>
+<a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%204%20Segmentation/Cluster_Lecture.html">Lecture 4 Segmentation</a><br>
+<a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%205%20Binary%20Logit%20and%20Targeting/Binary_Logit.html">Lecture 5 Binary Logit and Targeting</a><br>
+<a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%206%20Bass%20Model%20and%20Forecasting/Forcast_Bass_Lecture.Rmd">Lecture 6 Bass Model and Forecasting</a><br>
+<a href="https://honeycatty.github.io/MarketingAnalytics/Lecture%207%20MNL%20model%20and%20Choice/MNL_model2.html">Lecture 7 MNL model and Choice</a><br>
+<a href="https://honeycatty.github.io/MarketingAnalytics/Bayes.html">Lecture 8 Bayes and Experiment Design</a><br>
+
+</article>
+
+<footer>Copyright &copy; xdong1@scu.edu</footer>
+
+</div>
+
 </body>
 </html>
