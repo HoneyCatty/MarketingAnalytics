@@ -113,7 +113,7 @@ Each of these data files has 3 columns,
 ```{r}
 
 # set work directory
-setwd("C:/Users/xjdong/Google Drive/Teaching/2017_09_Analytics_useR/Lecture 6 Bass Model")
+# setwd("C:/Users/xjdong/Google Drive/Teaching/2017_09_Analytics_useR/Lecture 6 Bass Model")
 # clear environment
 rm(list=ls())
 
